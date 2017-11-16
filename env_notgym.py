@@ -4,12 +4,10 @@ class env(X,y):
 
 	def __init__(self,X,y): 
 		self.state = None
-		self.datapoint = None
-		self.label = None
+		self.X = X
+		self.y = y
+		self.counter = 0
 
-	def datapoint(self, x_cur,y_cur):
-		self.datapoint = x_cur
-		self.label = y_cur
 
 
 	def _step(self, action):
@@ -47,6 +45,8 @@ class env(X,y):
         return self.state,reward, done
 
     def _reset(self):
-    	pass
+		self.datapoint = X[self.counter]
+		self.label = y[self.counter]
+		self.counter+=1
 
 

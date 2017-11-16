@@ -11,14 +11,14 @@ import numpy as np
 import tensorflow.contrib.layers as layers
 from gym import wrappers
 from sklearn.preprocessing import train_test_split as tts
-from envs.env_notgym import env
+from envnotgym import env
 
 
 class Agent(object):
     def __init__(self, input_size=4, hidden_size=2, gamma=0.95,
                  action_size=6, lr=0.1, dir='tmp/trial/'):
         # call the cartpole simulator from OpenAI gym package
-        self.env = env(X,y)
+        self.env = gym.make('rldt-v0')
         # If you wish to save the simulation video, simply uncomment the line below
         # self.env = wrappers.Monitor(self.env, dir, force=True, video_callable=self.video_callable)
 
@@ -102,12 +102,11 @@ def discounted_reward(rewards, gamma):
         ans[i] = running_sum
     return ans
 
-def one_trial(agent, sess, grad_buffer, reward_itr, i, render = False):
+def one_trial(agent, sess, reward_itr, i):
    
     # reset the environment
-    s = agent.env.reset()
-    for idx in range(len(grad_buffer)):
-        grad_buffer[idx] *= 0
+    s = e.reset()
+    
     state_history = []
     reward_history = []
     action_history = []
@@ -121,7 +120,7 @@ def one_trial(agent, sess, grad_buffer, reward_itr, i, render = False):
         # get the controller output under a given state
         action = agent.next_action(sess, feed_dict, greedy=greedy)
         # get the next states after taking an action
-        snext, r, done = agent.env.step(action)
+        snext, r, done = env.step(action)
 
         current_reward += r
         state_history.append(s)
@@ -163,6 +162,8 @@ def one_trial(agent, sess, grad_buffer, reward_itr, i, render = False):
 
 def main():
     
+	max_epoch = 100
+
 	iris = datasets.load_iris()
 	X = iris.data
 	y = iris.target
@@ -171,30 +172,22 @@ def main():
 	y = enc.transform(y).toarray()
 
 	e = env(X,y)
-
-	# X_train, X_test, y_train, y_test = tts(X,y,test_size = 0.33, random_seed = 21)
-
-    obt_itr = 10
-    max_epoch = 100
-    
-    # set up figure for animation
     agent = Agent(hidden_size=24, lr=0.2, gamma=0.95, dir=dir)
-    agent.show_parameters()
 
-    # tensorflow initialization for neural network controller
-    tfconfig = tf.ConfigProto()
-    tfconfig.gpu_options.allow_growth=True
-    sess = tf.Session(config=tfconfig)
+    sess = tf.Session()
     tf.global_variables_initializer().run(session=sess)
-    grad_buffer = sess.run(tf.trainable_variables())
-    tf.reset_default_graph()
+
+
+	for i in range(max_epoch):
+		one_trial(agent,sess)
+
+	# X_train, X_test, y_train, y_test = tts(X,y,test_size = 0.33, random_seed = 21) 
+   
 
 
     global reward_itr
     reward_itr = []
     args = [agent, sess, grad_buffer, reward_itr, sess, grad_buffer, agent, obt_itr, render]
-    # run the optimization 
-    plt.show()
 
 if __name__ == "__main__":
    main()

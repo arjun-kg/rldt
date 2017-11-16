@@ -45,5 +45,5 @@ class DTLearner(gym.Env):
         self.state += [val]
         return self.state,reward, done, dummy
 
-     def _reset(self):
-     	pass
+        def _reset(self):
+            pass 
