@@ -10,13 +10,15 @@ import gym
 import numpy as np
 import tensorflow.contrib.layers as layers
 from gym import wrappers
+from sklearn.preprocessing import train_test_split as tts
+from envs.env_notgym import env
 
 
 class Agent(object):
     def __init__(self, input_size=4, hidden_size=2, gamma=0.95,
                  action_size=6, lr=0.1, dir='tmp/trial/'):
         # call the cartpole simulator from OpenAI gym package
-        self.env = gym.make('rldt-v0')
+        self.env = env(X,y)
         # If you wish to save the simulation video, simply uncomment the line below
         # self.env = wrappers.Monitor(self.env, dir, force=True, video_callable=self.video_callable)
 
@@ -119,9 +121,8 @@ def one_trial(agent, sess, grad_buffer, reward_itr, i, render = False):
         # get the controller output under a given state
         action = agent.next_action(sess, feed_dict, greedy=greedy)
         # get the next states after taking an action
-        snext, r, done, _ = agent.env.step(action)
-        if render and i % 50 == 0:
-            agent.env.render()
+        snext, r, done = agent.env.step(action)
+
         current_reward += r
         state_history.append(s)
         reward_history.append(r)
@@ -161,8 +162,20 @@ def one_trial(agent, sess, grad_buffer, reward_itr, i, render = False):
     return state_history
 
 def main():
+    
+	iris = datasets.load_iris()
+	X = iris.data
+	y = iris.target
+	enc = OHE()
+	enc.fit(y)
+	y = enc.transform(y).toarray()
+
+	e = env(X,y)
+
+	# X_train, X_test, y_train, y_test = tts(X,y,test_size = 0.33, random_seed = 21)
+
     obt_itr = 10
-    max_epoch = 3000
+    max_epoch = 100
     
     # set up figure for animation
     agent = Agent(hidden_size=24, lr=0.2, gamma=0.95, dir=dir)
@@ -175,6 +188,7 @@ def main():
     tf.global_variables_initializer().run(session=sess)
     grad_buffer = sess.run(tf.trainable_variables())
     tf.reset_default_graph()
+
 
     global reward_itr
     reward_itr = []
